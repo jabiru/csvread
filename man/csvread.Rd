@@ -2,6 +2,7 @@
 % Please edit documentation in R/csvread-package.R, R/csvread.R
 \docType{package}
 \name{csvread}
+\alias{csvread-package}
 \alias{csvread}
 \alias{map.coltypes}
 \title{Fast Specialized CSV File Loader.}
@@ -271,6 +272,12 @@ frm
 }
 }
 \seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/jabiru/csvread}
+}
+
+
 \code{\link{int64}}
 }
 \author{
