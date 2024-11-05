@@ -124,7 +124,7 @@ public:
    /// Attaches to STRSXP vector. Note that a \b pointer to \c SEXP must be passed.
    virtual void attach(SEXP rvec)
    {
-      m_capacity = length(rvec);
+      m_capacity = Rf_length(rvec);
       m_count = 0;
       m_data = rvec;
    }
@@ -138,7 +138,7 @@ public:
          SET_STRING_ELT(m_data, m_count++, NA_STRING);
          return false;
       }
-      SET_STRING_ELT(m_data, m_count++, mkChar(s));
+      SET_STRING_ELT(m_data, m_count++, Rf_mkChar(s));
       return true;
    }
    /// Returns the size of the collection.
@@ -182,7 +182,7 @@ public:
    /// Attaches to INTSXP vector. Note that a \b pointer to \c SEXP must be passed.
    virtual void attach(SEXP rvec)
    {
-      m_data.attach(length(rvec), INTEGER(rvec));
+      m_data.attach(Rf_length(rvec), INTEGER(rvec));
    }
    /// Parse and append an element to the collection. Returns false if there was a parse error.
    virtual bool append(const char* s, const CMRNAStrings& nastrings)
@@ -251,7 +251,7 @@ public:
    /// Attaches to REALXP vector.
    virtual void attach(SEXP rvec)
    {
-      m_data.attach(length(rvec), REAL(rvec));
+      m_data.attach(Rf_length(rvec), REAL(rvec));
    }
    /// Parse and append an element to the collection. Returns false if there was a parse error.
    virtual bool append(const char* s, const CMRNAStrings& nastrings)

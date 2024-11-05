@@ -72,8 +72,8 @@ extern "C"
 SEXP getListElement(SEXP list, const char* str)
 {
    SEXP elmt = R_NilValue;
-   SEXP names = getAttrib(list, R_NamesSymbol);
-   for (int i = 0, n = length(list); i < n; i++)
+   SEXP names = Rf_getAttrib(list, R_NamesSymbol);
+   for (int i = 0, n = Rf_length(list); i < n; i++)
    {
       if (strcmp(CHAR(STRING_ELT(names, i)), str) == 0)
       {
@@ -98,7 +98,7 @@ SEXP numLines(SEXP filename)
       n++;
    }
    SEXP ret;
-   PROTECT(ret = allocVector(INTSXP,1));
+   PROTECT(ret = Rf_allocVector(INTSXP,1));
    INTEGER(ret)[0] = n;
    UNPROTECT(1);
    return ret;
@@ -126,19 +126,19 @@ SEXP readCSV(SEXP rschema)
 {
    // Check the arguments.
 
-   if (!isNewList(rschema))
+   if (!Rf_isNewList(rschema))
    {
-      error("c_readCSV: expecting a list with schema as the only argument");
+      Rf_error("c_readCSV: expecting a list with schema as the only argument");
    }
    SEXP rfilename = getListElement(rschema, "filename");
-   if (rfilename == R_NilValue) error("c_readCSV: missing 'filename' in the argument list");
+   if (rfilename == R_NilValue) Rf_error("c_readCSV: missing 'filename' in the argument list");
    string filename(CHAR(STRING_ELT(rfilename, 0)));
 
    SEXP rcoltypes = getListElement(rschema, "coltypes");
-   if (rcoltypes == R_NilValue || length(rcoltypes) == 0) error("c_readCSV: missing 'coltypes' in the argument list");
+   if (rcoltypes == R_NilValue || Rf_length(rcoltypes) == 0) Rf_error("c_readCSV: missing 'coltypes' in the argument list");
 
    SEXP rnastrings = getListElement(rschema, "na.strings");
-   if (rnastrings == R_NilValue || length(rnastrings) == 0) error("c_readCSV: missing 'na.strings' in the argument list");
+   if (rnastrings == R_NilValue || Rf_length(rnastrings) == 0) Rf_error("c_readCSV: missing 'na.strings' in the argument list");
 
    SEXP rcolnames = getListElement(rschema, "colnames");
 
@@ -151,11 +151,11 @@ SEXP readCSV(SEXP rschema)
    if (rnrows != R_NilValue)
    {
       nrows = (int) *(REAL(rnrows));
-      if (nrows < 1) error("c_readCSV: 'nrows' must be positive");
+      if (nrows < 1) Rf_error("c_readCSV: 'nrows' must be positive");
    }
    bool verbose = false;
    SEXP rverbose = getListElement(rschema, "verbose");
-   PROTECT(rverbose = coerceVector(rverbose, INTSXP));
+   PROTECT(rverbose = Rf_coerceVector(rverbose, INTSXP));
    if (rverbose != R_NilValue) verbose = (bool) *(INTEGER(rverbose));
    UNPROTECT(1);
 
@@ -164,16 +164,16 @@ SEXP readCSV(SEXP rschema)
    if (rdelim != R_NilValue)
    {
       string sdelim(CHAR(STRING_ELT(rdelim, 0)));
-      if (strlen(sdelim.c_str()) != 1) error("c_readCSV: delimiter must be a single character");
+      if (strlen(sdelim.c_str()) != 1) Rf_error("c_readCSV: delimiter must be a single character");
       delim = sdelim.c_str()[0];
    }
 
-   int ncols = length(rcoltypes);
+   int ncols = Rf_length(rcoltypes);
 
    // Get the na.strings
 
    CMRNAStrings nastrings;
-   for (int i = 0, n = length(rnastrings); i < n; i++)
+   for (int i = 0, n = Rf_length(rnastrings); i < n; i++)
    {
       nastrings.add(CHAR(STRING_ELT(rnastrings, i)));
    }
@@ -185,7 +185,7 @@ SEXP readCSV(SEXP rschema)
    ifstream istr(filename.c_str());
    if (istr.fail())
    {
-      error("c_readCSV: can't open file %s.", filename.c_str());
+      Rf_error("c_readCSV: can't open file %s.", filename.c_str());
    }
 
    // Read the headers if necessary.
@@ -243,7 +243,7 @@ SEXP readCSV(SEXP rschema)
 
    vector<string> colnames;
    int namecnt = 0;
-   for (int i = 0, n = length(rcolnames); i < n && namecnt < ncols; i++)
+   for (int i = 0, n = Rf_length(rcolnames); i < n && namecnt < ncols; i++)
    {
       colnames.push_back(CHAR(STRING_ELT(rcolnames, i)));
       namecnt++;
@@ -267,72 +267,72 @@ SEXP readCSV(SEXP rschema)
    vector<CMRDataCollector*> lst(ncols);
 
    SEXP rframe; // the return value
-   PROTECT(rframe = allocVector(VECSXP, ncols));
+   PROTECT(rframe = Rf_allocVector(VECSXP, ncols));
    if (nrows > 0)
    for (int i = 0; i < ncols; i++)
    {
       if (strcmp(CHAR(STRING_ELT(rcoltypes, i)), "integer") == 0)
       {
-         SET_VECTOR_ELT(rframe, i, allocVector(INTSXP, nrows));
+         SET_VECTOR_ELT(rframe, i, Rf_allocVector(INTSXP, nrows));
          lst[i] = new CMRDataCollectorInt();
          lst[i]->attach(VECTOR_ELT(rframe, i));
       }
       else
       if (strcmp(CHAR(STRING_ELT(rcoltypes, i)), "double") == 0)
       {
-         SET_VECTOR_ELT(rframe, i, allocVector(REALSXP, nrows));
+         SET_VECTOR_ELT(rframe, i, Rf_allocVector(REALSXP, nrows));
          lst[i] = new CMRDataCollectorDbl();
          lst[i]->attach(VECTOR_ELT(rframe, i));
       }
       else
       if (strcmp(CHAR(STRING_ELT(rcoltypes, i)), "integer64") == 0)
       {
-         SET_VECTOR_ELT(rframe, i, allocVector(REALSXP, nrows));
+         SET_VECTOR_ELT(rframe, i, Rf_allocVector(REALSXP, nrows));
          lst[i] = new CMRDataCollectorLong(10);
          lst[i]->attach(VECTOR_ELT(rframe, i));
 
          SEXP cls;
-         PROTECT(cls = allocVector(STRSXP, 1));
-         SET_STRING_ELT(cls, 0, mkChar("integer64"));
-         classgets(VECTOR_ELT(rframe, i), cls);
+         PROTECT(cls = Rf_allocVector(STRSXP, 1));
+         SET_STRING_ELT(cls, 0, Rf_mkChar("integer64"));
+         Rf_classgets(VECTOR_ELT(rframe, i), cls);
          UNPROTECT(1);
       }
       else
       if (strcmp(CHAR(STRING_ELT(rcoltypes, i)), "long") == 0)
       {
-         SET_VECTOR_ELT(rframe, i, allocVector(REALSXP, nrows));
+         SET_VECTOR_ELT(rframe, i, Rf_allocVector(REALSXP, nrows));
          lst[i] = new CMRDataCollectorLong(10);
          lst[i]->attach(VECTOR_ELT(rframe, i));
 
          SEXP cls;
-         PROTECT(cls = allocVector(STRSXP, 1));
-         SET_STRING_ELT(cls, 0, mkChar("int64"));
-         classgets(VECTOR_ELT(rframe, i), cls);
+         PROTECT(cls = Rf_allocVector(STRSXP, 1));
+         SET_STRING_ELT(cls, 0,  Rf_mkChar("int64"));
+         Rf_classgets(VECTOR_ELT(rframe, i), cls);
          UNPROTECT(1);
       }
       else
       if (strcmp(CHAR(STRING_ELT(rcoltypes, i)), "longhex") == 0)
       {
-         SET_VECTOR_ELT(rframe, i, allocVector(REALSXP, nrows));
+         SET_VECTOR_ELT(rframe, i, Rf_allocVector(REALSXP, nrows));
          lst[i] = new CMRDataCollectorLong(16);
          lst[i]->attach(VECTOR_ELT(rframe, i));
 
          SEXP cls;
-         PROTECT(cls = allocVector(STRSXP, 1));
-         SET_STRING_ELT(cls, 0, mkChar("int64"));
-         classgets(VECTOR_ELT(rframe, i), cls);
+         PROTECT(cls = Rf_allocVector(STRSXP, 1));
+         SET_STRING_ELT(cls, 0,  Rf_mkChar("int64"));
+         Rf_classgets(VECTOR_ELT(rframe, i), cls);
          UNPROTECT(1);
 
          SEXP rb;
-         PROTECT(rb = allocVector(INTSXP, 1));
+         PROTECT(rb = Rf_allocVector(INTSXP, 1));
          INTEGER(rb)[0] = 16;
-         setAttrib(VECTOR_ELT(rframe, i), install("base"), rb);
+         Rf_setAttrib(VECTOR_ELT(rframe, i), Rf_install("base"), rb);
          UNPROTECT(1);
       }
       else
       if (strcmp(CHAR(STRING_ELT(rcoltypes, i)), "string") == 0)
       {
-         SET_VECTOR_ELT(rframe, i, allocVector(STRSXP, nrows));
+         SET_VECTOR_ELT(rframe, i, Rf_allocVector(STRSXP, nrows));
          lst[i] = new CMRDataCollectorStr();
          lst[i]->attach(VECTOR_ELT(rframe, i));
       }
@@ -344,7 +344,7 @@ SEXP readCSV(SEXP rschema)
             delete lst[k];
          }
          if (istr.is_open()) istr.close();
-         error("c_readCSV: unsupported column type '%s'", CHAR(STRING_ELT(rcoltypes, i)));
+         Rf_error("c_readCSV: unsupported column type '%s'", CHAR(STRING_ELT(rcoltypes, i)));
       }
    }
 
@@ -366,30 +366,30 @@ SEXP readCSV(SEXP rschema)
    // Set the column names
 
    SEXP rOutColNames;
-   PROTECT(rOutColNames = allocVector(STRSXP, ncols));
+   PROTECT(rOutColNames = Rf_allocVector(STRSXP, ncols));
    for (int i = 0; i < ncols; i++)
    {
-      SET_STRING_ELT(rOutColNames, i, mkChar(colnames[i].c_str()));
+      SET_STRING_ELT(rOutColNames, i,  Rf_mkChar(colnames[i].c_str()));
    }
-   setAttrib(rframe, R_NamesSymbol, rOutColNames);
+   Rf_setAttrib(rframe, R_NamesSymbol, rOutColNames);
    //for (int i = 0; i < ncols; i++) Rprintf("%d %s\n", i, colnames[i].c_str());
 
 
    // Make it a data frame: add class and rownames
 
    SEXP rOutRowNames;
-   PROTECT(rOutRowNames = allocVector(INTSXP, nrows));
+   PROTECT(rOutRowNames = Rf_allocVector(INTSXP, nrows));
    int* iptr = INTEGER(rOutRowNames);
    for (int i = 0; i < nrows; i++)
    {
       iptr[i] = i + 1;
    }
-   setAttrib(rframe, R_RowNamesSymbol, rOutRowNames);
+   Rf_setAttrib(rframe, R_RowNamesSymbol, rOutRowNames);
 
    SEXP cls;
-   PROTECT(cls = allocVector(STRSXP, 1));
-   SET_STRING_ELT(cls, 0, mkChar("data.frame"));
-   classgets(rframe, cls);
+   PROTECT(cls = Rf_allocVector(STRSXP, 1));
+   SET_STRING_ELT(cls, 0,  Rf_mkChar("data.frame"));
+   Rf_classgets(rframe, cls);
 
    // Clean up
 
