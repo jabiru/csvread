@@ -1,8 +1,10 @@
 Package: csvread
 Title: Fast Specialized CSV File Loader
-Version: 1.2.2
-Author: Sergei Izrailev
-Maintainer: Sergei Izrailev <sizrailev@jabiruventures.com>
+Version: 1.2.3
+Authors@R: person(given = "Sergei",
+                family = "Izrailev",
+                role = c("aut", "cre"),
+                email = "sizrailev@jabiruventures.com")
 Description: Functions for loading large (10M+ lines) CSV
     and other delimited files, similar to read.csv, but typically faster and
     using less memory than the standard R loader. While not entirely general,
@@ -22,4 +24,4 @@ License: Apache License (== 2.0)
 Copyright: Copyright (C) Collective, Inc. | file inst/COPYRIGHTS
 Language: en-US
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
